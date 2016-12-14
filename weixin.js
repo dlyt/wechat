@@ -5,9 +5,11 @@
 
 var config = require('./config')
 var Wechat = require('./wechat/wechat')
+var Ticket = require('./wechat/ticket')
 var path = require('path')
 var menu = require('./menu')
 var wechatApi= new Wechat(config.wechat)
+var TicketAPi = new Ticket()
 
 wechatApi.delMenu().then(function () {
   return wechatApi.createMenu(menu)
@@ -52,9 +54,17 @@ exports.reply=function *(next) {
             this.body='您点击了菜单中： '+ message.EventKey
         }
         else if (message.Event==='scancode_waitmsg'){
-          console.log(message.ScanCodeInfo.ScanType);
-          console.log(message.ScanCodeInfo.ScanResult);
-            this.body='您点击了菜单中： '+ message.EventKey
+
+          yield  TicketAPi.checking(message.ScanCodeInfo.ScanResult).then(function (data) {
+                    if (data.code === '1010')
+                      var body = '验票成功'
+                    else
+                      var body = '验票失败'
+
+                    this.body = body
+
+                  }.bind(this))
+
         }
         else if (message.Event==='pic_sysphoto'){
             this.body='您点击了菜单中的链接： '+message.EventKey
@@ -74,56 +84,11 @@ exports.reply=function *(next) {
         var reply='牙合'+message.Content+'真不容易'
 
         if (content==='1'){
-            reply='第一'
+            reply='测试消息回复'
         }
-        else if(content==='2'){
-            reply='第二'
-        }
-        else if(content==='3'){
-            reply='第三'
-        }
-        else if(content==='4'){
-            reply=[{
-                title:'知识改变世界',
-                description:'卖弄书',
-                picUrl:__dirname+'\\img\\3.jpg',
-                url:'https://github.com/'
-            },{
-                title:'知识改变世界',
-                description:'卖弄书',
-                picUrl:__dirname+'\\img\\4.jpg',
-                url:'https://github.com/'
-            }]
-        }
-        else if(content==='5'){
-            var data = yield(wechatApi.uploadMaterial('image',__dirname+ '\\img\\5.jpg'))
-            reply={
-                type:'image',
-                mediaId:data.media_id
-            }
-        }
-        else if(content==='6'){
-            var data = yield(wechatApi.uploadMaterial('video',__dirname+ '\\img\\5.jpg'))
-            reply={
-                type:'video',
-                title:'回复视频内容',
-                description:'老司机带带我',
-                mediaId:data.media_id
-            }
-        }
-        else if(content==='7'){
-            var data = yield(wechatApi.uploadMaterial('image',__dirname+ '\\img\\5.jpg'))
-            reply={
-                type:'music',
-                title:'回复音乐内容',
-                description:'老司机带带我',
-                musicUrl:__dirname+'\\7.mp3',
-                thumbMediaId:data.media_id
-            }
-        }
-        this.body=reply
-        console.log(reply)
 
+        this.body=reply
     }
+
     yield (next)
 }

@@ -1,5 +1,6 @@
 /**
- * Created by 少冬 on 2016/7/18.
+ * Created by Jno
+ * Processing WeChat interface
  */
 'use strict'
 var Promise =require('bluebird')
@@ -18,17 +19,17 @@ var api={
     }
 }
 
-function Wechat(opts) {
-    var that=this
+class Wechat {
+  constructor (opts) {
     this.appID=opts.appID
     this.appSecret=opts.appSecret
     this.getAccessToken=opts.getAccessToken
     this.saveAccessToken=opts.saveAccessToken
 
     this.fetchAccessToken()
-}
+  }
 
-Wechat.prototype.fetchAccessToken = function (data){
+  fetchAccessToken (data) {
     var that=this
     if(this.access_token&&this.expires_in){
         if(this.isValidAccessToken(this)){
@@ -58,8 +59,9 @@ Wechat.prototype.fetchAccessToken = function (data){
             that.saveAccessToken(data)
             return Promise.resolve(data)
         })
-}
-Wechat.prototype.isValidAccessToken = function (data) {
+  }
+
+  isValidAccessToken (data) {
     if(!data||!data.access_token||data.expires_in){
         return false
     }
@@ -73,9 +75,9 @@ Wechat.prototype.isValidAccessToken = function (data) {
     }else {
         return false
     }
-}
+  }
 
-Wechat.prototype.updateAccessToken = function(){
+  updateAccessToken () {
     var appID=this.appID
     var appSecret = this.appSecret
     var url = api.accessToken+'&appid='+appID+'&secret='+appSecret
@@ -91,16 +93,16 @@ Wechat.prototype.updateAccessToken = function(){
             resolve(data)
         })
     })
-}
+  }
 
-Wechat.prototype.uploadMaterial = function(type,filepath){
+  uploadMaterial (type, filepath) {
     var that=this
-    var form={//构造表单
+    var form={
         media: fs.createReadStream(filepath)
     }
     var appID=this.appID
     var appSecret = this.appSecret
-    console.log(filepath)
+
     return new Promise(function (resolve,reject) {
         that
             .fetchAccessToken()
@@ -120,11 +122,10 @@ Wechat.prototype.uploadMaterial = function(type,filepath){
                 })
             })
     })
-}
+  }
 
-Wechat.prototype.createMenu = function(menu){
+  createMenu (menu) {
     var that = this
-
 
     return new Promise(function (resolve,reject) {
       that
@@ -146,9 +147,9 @@ Wechat.prototype.createMenu = function(menu){
             })
         })
     })
-}
+  }
 
-Wechat.prototype.delMenu = function(menu){
+  delMenu (menu) {
     var that = this
 
     return new Promise(function (resolve,reject) {
@@ -169,9 +170,9 @@ Wechat.prototype.delMenu = function(menu){
             })
         })
     })
-}
+  }
 
-Wechat.prototype.reply=function () {
+  reply () {
     var content = this.body
     var message = this.weixin
 
@@ -179,6 +180,9 @@ Wechat.prototype.reply=function () {
     this.status=200
     this.type='application/xml'
     this.body=xml
+  }
 }
+
+
 
 module.exports=Wechat
